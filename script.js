@@ -89,6 +89,17 @@ const createUsernames = function (accs) {
 };
 createUsernames(accounts);
 
+const updateUI = function (acc) {
+  // Display movements
+  displayMovements(curAcc.movements);
+
+  // Display balance
+  calcDisplayBalance(curAcc);
+
+  // Display Summary
+  calcDisplaySummary(curAcc);
+};
+
 const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
     .filter(mov => mov > 0)
@@ -109,9 +120,9 @@ const calcDisplaySummary = function (acc) {
   labelSumInterest.textContent = `${interest}€`;
 };
 
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc, mov) => (acc += mov), 0);
-  labelBalance.textContent = `${balance}€`;
+const calcDisplayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, mov) => (acc += mov), 0);
+  labelBalance.textContent = `${acc.balance}€`;
 };
 
 //Event handler
@@ -128,17 +139,30 @@ btnLogin.addEventListener('click', function (e) {
     containerApp.style.opacity = 100;
     // Clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
-
-    // Display movements
-    displayMovements(curAcc.movements);
-
-    // Display balance
-    calcDisplayBalance(curAcc.movements);
-
-    // Display Summary
-    calcDisplaySummary(curAcc);
+    //Update UI
+    updateUI(curAcc);
   } else {
     labelWelcome.textContent = `Log in to get started`;
     containerApp.style.opacity = 0;
+  }
+});
+
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+  inputTransferAmount.value = inputTransferTo.value = '';
+  if (
+    amount > 0 &&
+    receiverAcc &&
+    curAcc.balance >= amount &&
+    receiverAcc?.username !== curAcc.username
+  ) {
+    curAcc.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+    // Update UI
+    updateUI(curAcc);
   }
 });
