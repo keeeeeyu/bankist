@@ -61,9 +61,12 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
-  movements.forEach(function (move, i) {
+
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach(function (move, i) {
     const type = move > 0 ? 'deposit' : 'withdrawal';
 
     const html = `
@@ -92,10 +95,8 @@ createUsernames(accounts);
 const updateUI = function (acc) {
   // Display movements
   displayMovements(curAcc.movements);
-
   // Display balance
   calcDisplayBalance(curAcc);
-
   // Display Summary
   calcDisplaySummary(curAcc);
 };
@@ -165,4 +166,37 @@ btnTransfer.addEventListener('click', function (e) {
     // Update UI
     updateUI(curAcc);
   }
+});
+
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputLoanAmount.value);
+
+  if (amount > 0 && curAcc.movements.some(mov => mov >= amount * 0.1)) {
+    curAcc.movements.push(amount);
+    updateUI(curAcc);
+  }
+  inputLoanAmount.value = '';
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+  if (
+    curAcc.username === inputCloseUsername.value &&
+    curAcc.pin === Number(inputClosePin.value)
+  ) {
+    const idx = accounts.findIndex(acc => acc.username === curAcc.username);
+    inputCloseUsername.value = inputClosePin.value = '';
+    labelWelcome.textContent = `Log in to get started`;
+    accounts.splice(idx, 1);
+    containerApp.style.opacity = 0;
+  }
+});
+
+let sortState = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(curAcc.movements, !sortState);
+  sortState = !sortState;
 });
